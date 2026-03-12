@@ -209,13 +209,32 @@ int main() {
 
         if(robot.get_robot_state() == STATE_RECOVERY){
 
-            // move_pos[0] = 300;
-            // move_pos[1] = 800;
-            // move_pos[2] = 300;
+            float angle[6] = {-92.0, 3.0, -107.0, 0.0, -75.0, 9.0};
+            float velo[6] = {10.0, 10.0, 10.0, 10.0, 10.0, 10.0}; // 10 deg/sec
+            float acc[6] = {20.0, 20.0, 20.0, 20.0, 20.0, 20.0};  // 20 deg/sec^2
 
-            // robot.movej_h2r(move_pos, velo, acc, 10);
+            robot.movej_h2r(angle, velo, acc, 10.0);
+
+            bool bArrived = false;
+            while (!bArrived) {
+                robot.hold2run();
+
+                LPROBOT_POSE cur_j = robot.get_current_posj();
+                
+                float error_sum = 0;
+                for(int i=0; i<6; i++) {
+                    error_sum += std::abs(cur_j->_fPosition[i] - angle[i]);
+                }
+
+                if(error_sum < 0.5) { 
+                    bArrived = true;
+                    robot.stop(STOP_TYPE_QUICK); 
+                }
+
+                // D. 주기 조절 (API-DRFL 권장 주기는 약 10~50ms)
+                std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            }
         
-
         }
 
 
