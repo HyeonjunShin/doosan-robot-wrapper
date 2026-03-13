@@ -207,35 +207,35 @@ int main() {
         if (input.empty()) continue;
 
 
-        if(robot.get_robot_state() == STATE_RECOVERY){
+        // if(robot.get_robot_state() == STATE_RECOVERY){
 
-            float angle[6] = {-92.0, 3.0, -107.0, 0.0, -75.0, 9.0};
-            float velo[6] = {10.0, 10.0, 10.0, 10.0, 10.0, 10.0}; // 10 deg/sec
-            float acc[6] = {20.0, 20.0, 20.0, 20.0, 20.0, 20.0};  // 20 deg/sec^2
+        //     float angle[6] = {-92.0, 3.0, -107.0, 0.0, -75.0, 9.0};
+        //     float velo[6] = {10.0, 10.0, 10.0, 10.0, 10.0, 10.0}; // 10 deg/sec
+        //     float acc[6] = {20.0, 20.0, 20.0, 20.0, 20.0, 20.0};  // 20 deg/sec^2
 
-            robot.movej_h2r(angle, velo, acc, 10.0);
+        //     robot.movej_h2r(angle, velo, acc, 10.0);
 
-            bool bArrived = false;
-            while (!bArrived) {
-                robot.hold2run();
+        //     bool bArrived = false;
+        //     while (!bArrived) {
+        //         robot.hold2run();
 
-                LPROBOT_POSE cur_j = robot.get_current_posj();
+        //         LPROBOT_POSE cur_j = robot.get_current_posj();
                 
-                float error_sum = 0;
-                for(int i=0; i<6; i++) {
-                    error_sum += std::abs(cur_j->_fPosition[i] - angle[i]);
-                }
+        //         float error_sum = 0;
+        //         for(int i=0; i<6; i++) {
+        //             error_sum += std::abs(cur_j->_fPosition[i] - angle[i]);
+        //         }
 
-                if(error_sum < 0.5) { 
-                    bArrived = true;
-                    robot.stop(STOP_TYPE_QUICK); 
-                }
+        //         if(error_sum < 0.5) { 
+        //             bArrived = true;
+        //             robot.stop(STOP_TYPE_QUICK); 
+        //         }
 
-                // D. 주기 조절 (API-DRFL 권장 주기는 약 10~50ms)
-                std::this_thread::sleep_for(std::chrono::milliseconds(20));
-            }
+        //         // D. 주기 조절 (API-DRFL 권장 주기는 약 10~50ms)
+        //         std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        //     }
         
-        }
+        // }
 
 
 
@@ -248,6 +248,7 @@ int main() {
             // cout << robot.get_tool_force() << endl;
 
             if(robot.get_robot_state() == STATE_SAFE_OFF2){
+                robot.ManageAccessControl(MANAGE_ACCESS_CONTROL_FORCE_REQUEST);
                 robot.set_robot_mode(ROBOT_MODE_RECOVERY);
                 robot.set_robot_control(CONTROL_SERVO_ON);  
                 this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -255,30 +256,25 @@ int main() {
                 // robot.release_protective_stop(RELEASE_MODE_RELEASE);
                 // robot.set_robot_mode(ROBOT_MODE_AUTONOMOUS);
 
-                float angle[6] = {-92,3,-107,0,-75,9};
-                float valo[6] = {0,0,0,0,0,0};
-                float acc[6] = {0,0,0,0,0,0};
-                robot.movej_h2r(angle, valo, acc, 10.0);
-                robot.set_robot_mode(ROBOT_MODE_AUTONOMOUS);
+                // float angle[6] = {-92,3,-107,0,-75,9};
+                // float valo[6] = {0,0,0,0,0,0};
+                // float acc[6] = {0,0,0,0,0,0};
+                // robot.movej_h2r(angle, valo, acc, 10.0);
+                // robot.set_robot_mode(ROBOT_MODE_AUTONOMOUS);
 
 
                 float angle[6] = {-92.0, 3.0, -107.0, 0.0, -75.0, 9.0};
-                float velo[6] = {10.0, 10.0, 10.0, 10.0, 10.0, 10.0}; // 10 deg/sec
-                float acc[6] = {20.0, 20.0, 20.0, 20.0, 20.0, 20.0};  // 20 deg/sec^2
+                float velo[6] = {1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0}; // 10 deg/sec
+                float acc[6] =  {1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0};  // 20 deg/sec^2
 
-                // 2. 리커버리 동작 시작 명령
                 robot.movej_h2r(angle, velo, acc, 10.0);
 
-                // 3. 목적지 도달 시까지 반복 루프 (H2R 핵심 로직)
                 bool bArrived = false;
                 while (!bArrived) {
-                    // A. 생존 신호 전송 (이 호출이 없으면 로봇은 0.1초 내외로 멈춤)
                     robot.hold2run();
 
-                    // B. 현재 관절 각도 확인
-                    LPROBOT_POSJ cur_j = robot.get_current_posj();
+                    LPROBOT_POSE cur_j = robot.get_current_posj();
                     
-                    // C. 도착 판정 (모든 관절이 오차 범위 내인지 확인)
                     float error_sum = 0;
                     for(int i=0; i<6; i++) {
                         error_sum += std::abs(cur_j->_fPosition[i] - angle[i]);
@@ -288,10 +284,9 @@ int main() {
                         bArrived = true;
                         robot.stop(STOP_TYPE_QUICK); // 정지 명령
                     }
-
-                    // D. 주기 조절 (API-DRFL 권장 주기는 약 10~50ms)
                     std::this_thread::sleep_for(std::chrono::milliseconds(20));
                 }
+                // robot.set_robot_mode(ROBOT_MODE_AUTONOMOUS);
 
                 // move_pos[0] = 300;
                 // move_pos[1] = 800;
