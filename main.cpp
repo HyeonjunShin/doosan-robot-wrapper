@@ -261,6 +261,38 @@ int main() {
                 robot.movej_h2r(angle, valo, acc, 10.0);
                 robot.set_robot_mode(ROBOT_MODE_AUTONOMOUS);
 
+
+                float angle[6] = {-92.0, 3.0, -107.0, 0.0, -75.0, 9.0};
+                float velo[6] = {10.0, 10.0, 10.0, 10.0, 10.0, 10.0}; // 10 deg/sec
+                float acc[6] = {20.0, 20.0, 20.0, 20.0, 20.0, 20.0};  // 20 deg/sec^2
+
+                // 2. 리커버리 동작 시작 명령
+                robot.movej_h2r(angle, velo, acc, 10.0);
+
+                // 3. 목적지 도달 시까지 반복 루프 (H2R 핵심 로직)
+                bool bArrived = false;
+                while (!bArrived) {
+                    // A. 생존 신호 전송 (이 호출이 없으면 로봇은 0.1초 내외로 멈춤)
+                    robot.hold2run();
+
+                    // B. 현재 관절 각도 확인
+                    LPROBOT_POSJ cur_j = robot.get_current_posj();
+                    
+                    // C. 도착 판정 (모든 관절이 오차 범위 내인지 확인)
+                    float error_sum = 0;
+                    for(int i=0; i<6; i++) {
+                        error_sum += std::abs(cur_j->_fPosition[i] - angle[i]);
+                    }
+
+                    if(error_sum < 0.5) { // 전체 오차 합이 0.5도 미만이면 도착으로 간주
+                        bArrived = true;
+                        robot.stop(STOP_TYPE_QUICK); // 정지 명령
+                    }
+
+                    // D. 주기 조절 (API-DRFL 권장 주기는 약 10~50ms)
+                    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+                }
+
                 // move_pos[0] = 300;
                 // move_pos[1] = 800;
                 // move_pos[2] = 300;
