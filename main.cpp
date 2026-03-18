@@ -104,7 +104,7 @@ void OnDisConnected() {
 }
 
 
-const std::string IP_ADDRESS = "192.168.0.34";
+const std::string IP_ADDRESS = "192.168.1.30";
 bool get_control_access = false;
 bool is_standby = false;
 
@@ -176,7 +176,21 @@ int main() {
 		if(get_control_access && is_standby)   break;
 	}
 
-    robot.set_robot_mode(ROBOT_MODE_AUTONOMOUS);
+    robot.set_robot_mode(ROBOT_MODE_MANUAL);
+    
+    // robot.set_tcp("GripperDA_v1");
+    float suction_offset[6] = {121.90f, -121.90f, 266.11f, -45.0f, 0.0f, -120.0f};
+    robot.add_tcp("suction_cup", suction_offset);
+    robot.set_tcp("suction_cup");
+    cout << robot.get_tcp() << endl;
+
+    // float rel_pos[6] = {0, 0, 100, 0, 0, 0}; 
+    // robot.movel(rel_pos, 100, 200, 0, 0, DR_TOOL, MOVE_MODE_RELATIVE);
+    
+    // robot.config_create_tcp("suction_cup", {121.90, -121.90, 266.11, -45.0, 0.0, -120.0});
+    // robot.set_tool("suction_cup");
+    // cout << robot.get_tcp() << endl;
+    // cout << robot.get_tool() << endl;
 
 
 	// float targetPos[6] = {0.,0.,30.,0.,0.,0.};
@@ -196,9 +210,10 @@ int main() {
     // robot.movej(angle, 50, 50, 4.0);
 
 
-    float move_pos[6] = {100, 200, 102, 0, -180, 0};
-    float velo[2] = {1000, 1000};
-    float acc[2] =  {1000, 1000};
+    float home_joints[6] = {0, 0, -90, 0, -90, 0};
+    float move_pos[6] = {45, 750, 400, 0, 0, 0};
+    float velo[2] = {100, 100};
+    float acc[2] =  {100, 100};
     while (true){
         string input;
         getline(cin, input);
@@ -329,7 +344,7 @@ int main() {
 
         if (cmd == 'm' || cmd == 'M') {
             bool parse_success = true;
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 6; i++) {
                 if (!(ss >> move_pos[i])) {
                     parse_success = false;
                     break;
@@ -340,7 +355,7 @@ int main() {
                 if (robot.get_robot_state() == STATE_STANDBY) {
                     cout << "Moving to: [" << move_pos[0] << ", " << move_pos[1] << ", " << move_pos[2] 
                          << ", " << move_pos[3] << ", " << move_pos[4] << ", " << move_pos[5] << "]" << endl;
-                    bool ret = robot.movel(move_pos, velo, acc, 0);
+                    bool ret = robot.movel(move_pos, velo, acc, 0, MOVE_MODE_ABSOLUTE, MOVE_REFERENCE_BASE);
                     cout << ret << endl;
                 }
             }
